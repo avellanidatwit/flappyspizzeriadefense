@@ -51,6 +51,10 @@ const state = {
   projectiles: [],
   obstacles: [],
   collectibleCoins: [],
+  speedBoostActive: false,
+  speedBoostTimer: 0,
+  sizeBoostActive: false,
+  sizeBoostTimer: 0,
   player: {
     x: 120,
     y: 270,
@@ -80,6 +84,10 @@ function resetGame() {
   state.projectiles = [];
   state.obstacles = [];
   state.collectibleCoins = [];
+  state.speedBoostActive = false;
+  state.speedBoostTimer = 0;
+  state.sizeBoostActive = false;
+  state.sizeBoostTimer = 0;
   state.player.y = 270;
   state.player.velocity = 0;
   GAME.running = false;
@@ -219,12 +227,20 @@ function spawnObstacle() {
 
 function spawnCollectibleCoin() {
   const y = 80 + Math.random() * 380;
+  const rand = Math.random();
+  let type = "coin";
+  if (rand < 0.10) {
+    type = "speedboost";
+  } else if (rand < 0.15) {
+    type = "sizeboost";
+  }
   state.collectibleCoins.push({
     x: GAME.width + 40,
     y,
-    radius: 8,
+    radius: 24,
     speed: 1.5,
     collected: false,
+    type: type,
   });
 }
 
@@ -235,9 +251,17 @@ function fireProjectile(turret, delta) {
     (zombie) => zombie.laneIndex === turret.laneIndex && zombie.x > turret.x - 10
   );
   if (!hasTarget) return;
-  if (turret.cooldown > 0) return;
+  
   const config = toppingCatalog[turret.topping];
-  turret.cooldown = config.fireRate;
+  let fireRate = config.fireRate;
+  
+  // Apply speed boost multiplier if active
+  if (state.speedBoostActive) {
+    fireRate = fireRate / 2;
+  }
+  
+  if (turret.cooldown > 0) return;
+  turret.cooldown = fireRate;
   state.projectiles.push({
     x: turret.x + 20,
     y: turret.y,
@@ -274,8 +298,18 @@ function checkCollisions() {
       player.y + player.radius > coin.y - coin.radius &&
       player.y - player.radius < coin.y + coin.radius;
     if (hit) {
-      state.coins += 5;
-      state.score += 10;
+      if (coin.type === "speedboost") {
+        state.speedBoostActive = true;
+        state.speedBoostTimer = 10000; // 10 seconds
+        state.score += 25;
+      } else if (coin.type === "sizeboost") {
+        state.sizeBoostActive = true;
+        state.sizeBoostTimer = 10000; // 10 seconds
+        state.score += 25;
+      } else {
+        state.coins += 5;
+        state.score += 10;
+      }
       updateHud();
       return false;
     }
@@ -346,6 +380,22 @@ function update(delta) {
 
   if (Math.random() < 0.002) {
     spawnCollectibleCoin();
+  }
+
+  // Update speed boost timer
+  if (state.speedBoostActive) {
+    state.speedBoostTimer -= delta;
+    if (state.speedBoostTimer <= 0) {
+      state.speedBoostActive = false;
+    }
+  }
+
+  // Update size boost timer
+  if (state.sizeBoostActive) {
+    state.sizeBoostTimer -= delta;
+    if (state.sizeBoostTimer <= 0) {
+      state.sizeBoostActive = false;
+    }
   }
 
   updatePlayer(delta);
@@ -496,19 +546,51 @@ function renderScene() {
   });
 
   state.collectibleCoins.forEach((coin) => {
-    ctx.fillStyle = "#FFD700";
-    ctx.beginPath();
-    ctx.arc(coin.x, coin.y, coin.radius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#FFA500";
-    ctx.lineWidth = 2;
-    ctx.stroke();
+    if (coin.type === "speedboost") {
+      // Draw powerup with glowing effect
+      ctx.fillStyle = "#FF1493";
+      ctx.shadowColor = "#FF1493";
+      ctx.shadowBlur = 20;
+      ctx.beginPath();
+      ctx.arc(coin.x, coin.y, coin.radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "bold 16px Segoe UI";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("⚡", coin.x, coin.y);
+    } else if (coin.type === "sizeboost") {
+      // Draw size boost powerup
+      ctx.fillStyle = "#00FF00";
+      ctx.shadowColor = "#00FF00";
+      ctx.shadowBlur = 20;
+      ctx.beginPath();
+      ctx.arc(coin.x, coin.y, coin.radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "bold 20px Segoe UI";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("↔", coin.x, coin.y);
+    } else {
+      // Draw regular coin
+      ctx.fillStyle = "#FFD700";
+      ctx.beginPath();
+      ctx.arc(coin.x, coin.y, coin.radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#FFA500";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
   });
 
   const player = state.player;
   ctx.fillStyle = "#ffd166";
+  const playerRadius = state.sizeBoostActive ? player.radius * 2 : player.radius;
   ctx.beginPath();
-  ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+  ctx.arc(player.x, player.y, playerRadius, 0, Math.PI * 2);
   ctx.fill();
   ctx.fillStyle = "#111";
   ctx.beginPath();
