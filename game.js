@@ -29,6 +29,7 @@ const GAME = {
   baseSpawnInterval: 3200,
   minSpawnInterval: 1600,
   spawnRampPerWave: 150,
+  hazardLineHeight: 8, // Height of red hazard lines
 };
 
 const toppingCatalog = {
@@ -236,15 +237,13 @@ function updatePlayer(delta) {
   state.player.velocity += state.player.gravity;
   state.player.y += state.player.velocity;
 
-  if (state.player.y < 40) {
-    state.player.y = 40;
-    state.player.velocity = 0;
+  // Check collision with top red hazard line
+  if (state.player.y - state.player.radius <= GAME.hazardLineHeight) {
     state.lives = 0;
     updateHud();
   }
-  if (state.player.y > GAME.height - 40) {
-    state.player.y = GAME.height - 40;
-    state.player.velocity = 0;
+  // Check collision with bottom red hazard line
+  if (state.player.y + state.player.radius >= GAME.height - GAME.hazardLineHeight) {
     state.lives = 0;
     updateHud();
   }
@@ -366,42 +365,18 @@ function update(delta) {
 function renderScene() {
   ctx.clearRect(0, 0, GAME.width, GAME.height);
 
-  // Danger zones (fire/flames at top and bottom)
-  ctx.fillStyle = "rgba(255, 69, 0, 0.3)";
-  ctx.fillRect(0, 0, GAME.width, 80);
-  ctx.fillRect(0, GAME.height - 40, GAME.width, 40);
+  // Draw solid red hazard lines at top and bottom
+  ctx.fillStyle = "#ff0000";
+  ctx.fillRect(0, 0, GAME.width, GAME.hazardLineHeight);
+  ctx.fillRect(0, GAME.height - GAME.hazardLineHeight, GAME.width, GAME.hazardLineHeight);
 
-  // Flame graphics at top
-  for (let i = 0; i < GAME.width; i += 40) {
-    ctx.fillStyle = "rgba(255, 140, 0, 0.6)";
-    ctx.beginPath();
-    ctx.moveTo(i, 75);
-    ctx.lineTo(i + 15, 50);
-    ctx.lineTo(i + 30, 75);
-    ctx.fill();
-    ctx.fillStyle = "rgba(255, 200, 0, 0.5)";
-    ctx.beginPath();
-    ctx.moveTo(i + 5, 70);
-    ctx.lineTo(i + 15, 55);
-    ctx.lineTo(i + 25, 70);
-    ctx.fill();
-  }
-
-  // Flame graphics at bottom
-  for (let i = 0; i < GAME.width; i += 40) {
-    ctx.fillStyle = "rgba(255, 140, 0, 0.6)";
-    ctx.beginPath();
-    ctx.moveTo(i, GAME.height - 40);
-    ctx.lineTo(i + 15, GAME.height - 15);
-    ctx.lineTo(i + 30, GAME.height - 40);
-    ctx.fill();
-    ctx.fillStyle = "rgba(255, 200, 0, 0.5)";
-    ctx.beginPath();
-    ctx.moveTo(i + 5, GAME.height - 35);
-    ctx.lineTo(i + 15, GAME.height - 20);
-    ctx.lineTo(i + 25, GAME.height - 35);
-    ctx.fill();
-  }
+  // Add shadow/glow effect to make the hazard lines more visible
+  ctx.shadowColor = "rgba(255, 0, 0, 0.8)";
+  ctx.shadowBlur = 15;
+  ctx.fillStyle = "#ff0000";
+  ctx.fillRect(0, 0, GAME.width, GAME.hazardLineHeight);
+  ctx.fillRect(0, GAME.height - GAME.hazardLineHeight, GAME.width, GAME.hazardLineHeight);
+  ctx.shadowBlur = 0;
 
   ctx.fillStyle = "#1f2640";
   ctx.fillRect(0, 80, GAME.width, 420);
