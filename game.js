@@ -50,6 +50,7 @@ const state = {
   zombies: [],
   projectiles: [],
   obstacles: [],
+  collectibleCoins: [],
   player: {
     x: 120,
     y: 270,
@@ -78,6 +79,7 @@ function resetGame() {
   state.zombies = [];
   state.projectiles = [];
   state.obstacles = [];
+  state.collectibleCoins = [];
   state.player.y = 270;
   state.player.velocity = 0;
   GAME.running = false;
@@ -87,6 +89,8 @@ function resetGame() {
   GAME.obstacleTimer = 0;
   GAME.waveTimer = 0;
   GAME.orderTimer = 0;
+  addOrder();
+  addOrder();
   updateHud();
   renderOrders();
   renderScene();
@@ -213,6 +217,17 @@ function spawnObstacle() {
   });
 }
 
+function spawnCollectibleCoin() {
+  const y = 80 + Math.random() * 380;
+  state.collectibleCoins.push({
+    x: GAME.width + 40,
+    y,
+    radius: 8,
+    speed: 1.5,
+    collected: false,
+  });
+}
+
 function fireProjectile(turret, delta) {
   if (turret.shotsLeft <= 0) return;
   turret.cooldown -= delta;
@@ -251,6 +266,21 @@ function updatePlayer(delta) {
 
 function checkCollisions() {
   const player = state.player;
+
+  state.collectibleCoins = state.collectibleCoins.filter((coin) => {
+    const hit =
+      player.x + player.radius > coin.x - coin.radius &&
+      player.x - player.radius < coin.x + coin.radius &&
+      player.y + player.radius > coin.y - coin.radius &&
+      player.y - player.radius < coin.y + coin.radius;
+    if (hit) {
+      state.coins += 5;
+      state.score += 10;
+      updateHud();
+      return false;
+    }
+    return true;
+  });
 
   state.obstacles = state.obstacles.filter((obs) => {
     const hit =
@@ -314,6 +344,10 @@ function update(delta) {
     addOrder();
   }
 
+  if (Math.random() < 0.002) {
+    spawnCollectibleCoin();
+  }
+
   updatePlayer(delta);
 
   state.zombies.forEach((zombie) => {
@@ -327,6 +361,10 @@ function update(delta) {
       state.coins += 2;
       state.score += 5;
     }
+  });
+
+  state.collectibleCoins.forEach((coin) => {
+    coin.x -= coin.speed;
   });
 
   state.turrets.forEach((turret) => fireProjectile(turret, delta));
@@ -357,6 +395,8 @@ function update(delta) {
   state.zombies = state.zombies.filter((zombie) => zombie.health > 0);
 
   state.obstacles = state.obstacles.filter((obs) => obs.x > -60);
+
+  state.collectibleCoins = state.collectibleCoins.filter((coin) => coin.x > -30);
 
   checkCollisions();
   updateHud();
@@ -453,6 +493,16 @@ function renderScene() {
     ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
     ctx.fillStyle = "#f0c27b";
     ctx.fillRect(obs.x + 6, obs.y + 10, obs.width - 12, obs.height - 20);
+  });
+
+  state.collectibleCoins.forEach((coin) => {
+    ctx.fillStyle = "#FFD700";
+    ctx.beginPath();
+    ctx.arc(coin.x, coin.y, coin.radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#FFA500";
+    ctx.lineWidth = 2;
+    ctx.stroke();
   });
 
   const player = state.player;
