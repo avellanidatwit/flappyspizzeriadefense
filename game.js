@@ -11,6 +11,7 @@ const baseEl = document.getElementById("base");
 const coinsEl = document.getElementById("coins");
 const waveEl = document.getElementById("wave");
 const scoreEl = document.getElementById("score");
+const highScoreEl = document.getElementById("highScore");
 
 const shopButtons = document.querySelectorAll(".shop-btn");
 
@@ -44,6 +45,7 @@ const state = {
   coins: 40,
   wave: 1,
   score: 0,
+  highScore: localStorage.getItem("flappyHighScore") ? parseInt(localStorage.getItem("flappyHighScore")) : 0,
   selectedTopping: null,
   orders: [],
   turrets: [],
@@ -135,6 +137,7 @@ function updateHud() {
   coinsEl.textContent = state.coins;
   waveEl.textContent = state.wave;
   scoreEl.textContent = state.score;
+  highScoreEl.textContent = state.highScore;
 }
 
 function addOrder() {
@@ -148,14 +151,15 @@ function addOrder() {
 }
 
 function addOrderBatch() {
-  const batchSize = 2 + Math.floor(Math.random() * 4); // Random 2-5 orders
-  for (let i = 0; i < batchSize; i++) {
+  // Add exactly 2 orders to the beginning of the list (top)
+  for (let i = 0; i < 2; i++) {
     const toppings = Object.keys(toppingCatalog);
     const topping = toppings[Math.floor(Math.random() * toppings.length)];
-    state.orders.push({ id: crypto.randomUUID(), topping });
+    state.orders.unshift({ id: crypto.randomUUID(), topping });
   }
+  // Keep only the 10 most recent orders
   if (state.orders.length > 10) {
-    state.orders = state.orders.slice(-10);
+    state.orders = state.orders.slice(0, 10);
   }
   renderOrders();
 }
@@ -466,6 +470,12 @@ function update(delta) {
 
   checkCollisions();
   updateHud();
+  
+  // Update high score if current score is higher
+  if (state.score > state.highScore) {
+    state.highScore = state.score;
+    localStorage.setItem("flappyHighScore", state.highScore);
+  }
 }
 
 function renderScene() {
