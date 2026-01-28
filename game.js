@@ -237,7 +237,7 @@ function spawnCollectibleCoin() {
   state.collectibleCoins.push({
     x: GAME.width + 40,
     y,
-    radius: 24,
+    radius: 15,
     speed: 1.5,
     collected: false,
     type: type,
