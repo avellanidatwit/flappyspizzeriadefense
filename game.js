@@ -26,8 +26,8 @@ const GAME = {
   obstacleTimer: 0,
   waveTimer: 0,
   orderTimer: 0,
-  baseSpawnInterval: 3200,
-  minSpawnInterval: 1600,
+  baseSpawnInterval: 2700,
+  minSpawnInterval: 1100,
   spawnRampPerWave: 150,
   hazardLineHeight: 8, // Height of red hazard lines
 };
