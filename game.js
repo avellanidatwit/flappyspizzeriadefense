@@ -63,6 +63,7 @@ const TIMINGS = {
   waveInterval: 22000,
   speedBoostDuration: 10000,
   sizeBoostDuration: 10000,
+  gravityReverseDuration: 8000,
   coinSpawnChance: 0.002,
 };
 
@@ -80,6 +81,7 @@ const COLORS = {
   player: "#ffd166",
   speedBoost: "#FF1493",
   sizeBoost: "#00FF00",
+  gravityReverse: "#9D4EDD",
   coin: "#FFD700",
   coinStroke: "#FFA500",
   text: "#ffffff",
@@ -108,6 +110,8 @@ const GameState = {
   speedBoostTimer: 0,
   sizeBoostActive: false,
   sizeBoostTimer: 0,
+  gravityReverseActive: false,
+  gravityReverseTimer: 0,
   player: {
     x: 120,
     y: 270,
@@ -174,6 +178,8 @@ function resetGameState() {
   GameState.speedBoostTimer = 0;
   GameState.sizeBoostActive = false;
   GameState.sizeBoostTimer = 0;
+  GameState.gravityReverseActive = false;
+  GameState.gravityReverseTimer = 0;
   GameState.player.y = 270;
   GameState.player.velocity = 0;
 }
@@ -383,10 +389,12 @@ function spawnCollectibleCoin() {
   const rand = Math.random();
   let type = "coin";
   
-  if (rand < 0.10) {
+  if (rand < 0.08) {
     type = "speedboost";
-  } else if (rand < 0.15) {
+  } else if (rand < 0.13) {
     type = "sizeboost";
+  } else if (rand < 0.18) {
+    type = "gravityreverse";
   }
   
   GameState.collectibleCoins.push({
@@ -414,6 +422,10 @@ function applyCollectibleBoost(coin) {
     GameState.sizeBoostActive = true;
     GameState.sizeBoostTimer = TIMINGS.sizeBoostDuration;
     GameState.score += 25;
+  } else if (coin.type === "gravityreverse") {
+    GameState.gravityReverseActive = true;
+    GameState.gravityReverseTimer = TIMINGS.gravityReverseDuration;
+    GameState.score += 30;
   } else {
     GameState.coins += 5;
     GameState.score += 10;
@@ -425,7 +437,8 @@ function applyCollectibleBoost(coin) {
 // ============================================================================
 
 function updatePlayer(delta) {
-  GameState.player.velocity += PHYSICS.gravity;
+  const gravityMultiplier = GameState.gravityReverseActive ? -1 : 1;
+  GameState.player.velocity += PHYSICS.gravity * gravityMultiplier;
   GameState.player.y += GameState.player.velocity;
 
   // Check collision with hazard lines
@@ -534,6 +547,13 @@ function updateBoosts(delta) {
     GameState.sizeBoostTimer -= delta;
     if (GameState.sizeBoostTimer <= 0) {
       GameState.sizeBoostActive = false;
+    }
+  }
+
+  if (GameState.gravityReverseActive) {
+    GameState.gravityReverseTimer -= delta;
+    if (GameState.gravityReverseTimer <= 0) {
+      GameState.gravityReverseActive = false;
     }
   }
 }
@@ -774,6 +794,20 @@ function drawCollectibles() {
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText("↔", coin.x, coin.y);
+    } else if (coin.type === "gravityreverse") {
+      ctx.fillStyle = COLORS.gravityReverse;
+      ctx.shadowColor = COLORS.gravityReverse;
+      ctx.shadowBlur = 20;
+      ctx.beginPath();
+      ctx.arc(coin.x, coin.y, coin.radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "bold 18px Segoe UI";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("⇅", coin.x, coin.y);
     } else {
       ctx.fillStyle = COLORS.coin;
       ctx.beginPath();
