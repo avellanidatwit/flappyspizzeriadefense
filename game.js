@@ -138,8 +138,21 @@ function addOrder() {
   const toppings = Object.keys(toppingCatalog);
   const topping = toppings[Math.floor(Math.random() * toppings.length)];
   state.orders.push({ id: crypto.randomUUID(), topping });
-  if (state.orders.length > 3) {
+  if (state.orders.length > 10) {
     state.orders.shift();
+  }
+  renderOrders();
+}
+
+function addOrderBatch() {
+  const batchSize = 2 + Math.floor(Math.random() * 4); // Random 2-5 orders
+  for (let i = 0; i < batchSize; i++) {
+    const toppings = Object.keys(toppingCatalog);
+    const topping = toppings[Math.floor(Math.random() * toppings.length)];
+    state.orders.push({ id: crypto.randomUUID(), topping });
+  }
+  if (state.orders.length > 10) {
+    state.orders = state.orders.slice(-10);
   }
   renderOrders();
 }
@@ -375,7 +388,7 @@ function update(delta) {
 
   if (GAME.orderTimer > 7000) {
     GAME.orderTimer = 0;
-    addOrder();
+    addOrderBatch();
   }
 
   if (Math.random() < 0.002) {
@@ -658,8 +671,11 @@ shopButtons.forEach((btn) => {
   btn.addEventListener("click", () => selectTopping(btn.dataset.topping));
 });
 
-addOrder();
-addOrder();
+addOrderBatch();
+addOrderBatch();
+addOrderBatch();
+addOrderBatch();
+addOrderBatch();
 renderOrders();
 renderScene();
 updateHud();
