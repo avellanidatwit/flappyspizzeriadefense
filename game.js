@@ -27,8 +27,8 @@ const GAME = {
   obstacleTimer: 0,
   waveTimer: 0,
   orderTimer: 0,
-  baseSpawnInterval: 2200,
-  minSpawnInterval: 1100,
+  baseSpawnInterval: 6000,
+  minSpawnInterval: 5000,
   hazardLineHeight: 8, // Height of red hazard lines
 };
 
@@ -233,9 +233,23 @@ function spawnZombie() {
 }
 
 function spawnZombieWave() {
-  const waveSize = 5 + Math.floor(Math.random() * 11); // Random 5-15 zombies
-  for (let i = 0; i < waveSize; i++) {
-    spawnZombie();
+  const zombiesPerLane = 2 + Math.floor(Math.random() * 4); // Random 2-5 zombies per lane
+  const speed = 0.9 + state.wave * 0.1;
+  const health = 3 + state.wave;
+  
+  // Spawn zombies spread across each lane
+  for (let laneIndex = 0; laneIndex < GAME.lanes.length; laneIndex++) {
+    for (let i = 0; i < zombiesPerLane; i++) {
+      const laneY = getLaneCenter(laneIndex);
+      state.zombies.push({
+        x: GAME.width + 40 + (i * 60), // Spread them out horizontally
+        y: laneY,
+        laneIndex,
+        speed,
+        health,
+        maxHealth: health,
+      });
+    }
   }
   // Trigger new orders when wave spawns
   addOrderBatch();
