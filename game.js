@@ -35,7 +35,7 @@ const GAME = {
 const toppingCatalog = {
   pepperoni: { label: "Pepperoni", emoji: "🍕", cost: 30, damage: 2, fireRate: 500, shots: 10 },
   mushroom: { label: "Mushroom", emoji: "🍄", cost: 20, damage: 1, fireRate: 200, shots: 20 },
-  olive: { label: "Olive", emoji: "🫒", cost: 40, damage: 3, fireRate: 1000, shots: 4 },
+  olive: { label: "Olive", emoji: "🫒", cost: 40, damage: 5, fireRate: 1200, shots: 5 },
 };
 
 const state = {
@@ -378,6 +378,17 @@ function renderScene() {
   ctx.fillRect(0, GAME.height - GAME.hazardLineHeight, GAME.width, GAME.hazardLineHeight);
   ctx.shadowBlur = 0;
 
+  // Draw solid red hazard line at top
+  ctx.fillStyle = "#ff0000";
+  ctx.fillRect(0, 0, GAME.width, GAME.hazardLineHeight);
+
+  // Add shadow/glow effect to make the hazard line more visible
+  ctx.shadowColor = "rgba(255, 0, 0, 0.8)";
+  ctx.shadowBlur = 15;
+  ctx.fillStyle = "#ff0000";
+  ctx.fillRect(0, 0, GAME.width, GAME.hazardLineHeight);
+  ctx.shadowBlur = 0;
+
   ctx.fillStyle = "#1f2640";
   ctx.fillRect(0, 80, GAME.width, 420);
 
@@ -404,12 +415,6 @@ function renderScene() {
       ctx.fillText("PLACE", turretX - 18, laneY + 42);
     });
   });
-
-  ctx.fillStyle = "#3e2b1d";
-  ctx.fillRect(0, 0, GAME.width, 80);
-  ctx.fillStyle = "#e7a84b";
-  ctx.font = "20px Segoe UI";
-  ctx.fillText("Flappy's Pizza Skyway", 20, 50);
 
   state.turrets.forEach((turret) => {
     const config = toppingCatalog[turret.topping];
