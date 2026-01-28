@@ -151,15 +151,15 @@ function addOrder() {
 }
 
 function addOrderBatch() {
-  // Add exactly 2 orders to the beginning of the list (top)
+  // Add exactly 2 orders to the bottom of the list
   for (let i = 0; i < 2; i++) {
     const toppings = Object.keys(toppingCatalog);
     const topping = toppings[Math.floor(Math.random() * toppings.length)];
-    state.orders.unshift({ id: crypto.randomUUID(), topping });
+    state.orders.push({ id: crypto.randomUUID(), topping });
   }
   // Keep only the 10 most recent orders
   if (state.orders.length > 10) {
-    state.orders = state.orders.slice(0, 10);
+    state.orders = state.orders.slice(-10);
   }
   renderOrders();
 }
@@ -231,6 +231,15 @@ function spawnZombie() {
     health,
     maxHealth: health,
   });
+}
+
+function spawnZombieWave() {
+  const waveSize = 5 + Math.floor(Math.random() * 11); // Random 5-15 zombies
+  for (let i = 0; i < waveSize; i++) {
+    spawnZombie();
+  }
+  // Trigger new orders when wave spawns
+  addOrderBatch();
 }
 
 function spawnObstacle() {
@@ -379,7 +388,7 @@ function update(delta) {
 
   if (GAME.spawnTimer > spawnInterval) {
     GAME.spawnTimer = 0;
-    spawnZombie();
+    spawnZombieWave();
   }
 
   if (GAME.obstacleTimer > 2400) {
