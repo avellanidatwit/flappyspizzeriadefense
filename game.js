@@ -97,8 +97,11 @@ function resetGame() {
   GAME.obstacleTimer = 0;
   GAME.waveTimer = 0;
   GAME.orderTimer = 0;
-  addOrder();
-  addOrder();
+  addOrderBatch();
+  addOrderBatch();
+  addOrderBatch();
+  addOrderBatch();
+  addOrderBatch();
   updateHud();
   renderOrders();
   renderScene();
