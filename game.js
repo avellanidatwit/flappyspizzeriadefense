@@ -344,6 +344,8 @@ function spawnZombieWave() {
       });
     }
   }
+
+  addOrderBatch();
 }
 
 function updateZombies() {
